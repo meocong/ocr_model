@@ -2,7 +2,8 @@ import click
 
 
 from model.utils.data_generator import DataGenerator
-from model.img2seq import Img2SeqModel
+# from model.img2seq import Img2SeqModel
+from model.img2seq_ctc import Img2SeqCtcModel
 from model.utils.lr_schedule import LRSchedule
 from model.utils.general import Config
 from model.utils.text import Vocab
@@ -20,7 +21,10 @@ from model.utils.image import greyscale
         help='Path to model json config')
 @click.option('--output', default="results/small/",
         help='Dir for results and model weights')
-def main(data, vocab, training, model, output):
+@click.option('--restore', default=False,
+        help='Resume training from model weights')
+
+def main(data, vocab, training, model, output, restore):
     # Load configs
     dir_output = output
     config = Config([data, vocab, training, model])
@@ -34,6 +38,7 @@ def main(data, vocab, training, model, output):
             path_matching=config.path_matching_train,
             max_len=config.max_length_formula,
             form_prepro=vocab.form_prepro)
+
     val_set = DataGenerator(path_formulas=config.path_formulas_val,
             dir_images=config.dir_images_val, img_prepro=greyscale,
             max_iter=config.max_iter, bucket=config.bucket_val,
@@ -52,8 +57,12 @@ def main(data, vocab, training, model, output):
             lr_min=config.lr_min)
 
     # Build model and train
-    model = Img2SeqModel(config, dir_output, vocab)
+    model = Img2SeqCtcModel(config, dir_output, vocab)
     model.build_train(config)
+
+    if restore:
+        model.restore_session(dir_output + "model.weights/")
+
     model.train(config, train_set, val_set, lr_schedule)
 
 

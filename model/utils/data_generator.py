@@ -7,6 +7,7 @@ from scipy.misc import imread
 from .text import load_formulas
 from .image import build_images, greyscale
 from .general import init_dir
+import random
 
 
 class DataGeneratorFile(object):
@@ -26,9 +27,9 @@ class DataGeneratorFile(object):
 
     def __iter__(self):
         with open(self._filename) as f:
-            for line in f:
-                line = line.strip().split(' ')
-                path_img, id_formula = line[0], line[1]
+            for idx, line in enumerate(f):
+                line = line.strip() #.split(' ')
+                path_img, id_formula = line, idx #line[1]
                 yield path_img, id_formula
 
 
@@ -78,7 +79,7 @@ class DataGenerator(object):
 
     def _set_data_generator(self):
         """Sets iterable or generator of tuples (img_path, id of formula)"""
-        self._data_generator = DataGeneratorFile(self._path_matching)
+        self._data_generator = list(DataGeneratorFile(self._path_matching))
 
         if self._bucket:
             self._data_generator = self.bucket(self._bucket_size)
@@ -114,7 +115,7 @@ class DataGenerator(object):
             data_buckets[s] += [(img_path, formula_id)]
 
         # write the rest of the buffer
-        for k, v in data_buckets.iteritems():
+        for k, v in data_buckets.items():
             for (img_path, formula_id) in v:
                 bucketed_dataset += [(img_path, formula_id)]
 
@@ -171,7 +172,7 @@ class DataGenerator(object):
 
         img = imread(self._dir_images + "/" + img_path)
         img = self._img_prepro(img)
-        formula = self._form_prepro(self._get_raw_formula(formula_id))
+        formula = list(self._form_prepro(self._get_raw_formula(formula_id)))
 
         if self._iter_mode == "data":
             inst = (img, formula)
@@ -206,15 +207,19 @@ class DataGenerator(object):
 
 
     def __len__(self):
-        if self._length is None:
-            print("First call to len(dataset) - may take a while.")
-            counter = 0
-            for _ in self:
-                counter += 1
-            self._length = counter
-            print("- done.")
+        # if self._length is None:
+        #     print("First call to len(dataset) - may take a while.")
+        #     counter = 0
+        #     for _ in self:
+        #         counter += 1
+        #     self._length = counter
+        #     print("- done.")
+        return len(self._formulas)
 
-        return self._length
+        # return self._length
+
+    def shuffle(self):
+        random.shuffle(self._data_generator)
 
 
     def build(self, quality=100, density=200, down_ratio=2, buckets=None,

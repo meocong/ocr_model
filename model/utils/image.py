@@ -4,6 +4,7 @@ import os
 import PIL
 from PIL import Image
 from multiprocessing import Pool
+from scipy.misc import imresize
 
 
 from .general import run, get_files, delete_file, init_dir
@@ -18,11 +19,14 @@ def get_max_shape(arrays):
         images: list of arrays
 
     """
-    shapes = map(lambda x: list(x.shape), arrays)
+    shapes = list(map(lambda x: list(x.shape), arrays))
     ndim = len(arrays[0].shape)
+    # print(shapes)
     max_shape = []
     for d in range(ndim):
         max_shape += [max(shapes, key=lambda x: x[d])[d]]
+
+    # print(max_shape)
 
     return max_shape
 
@@ -36,6 +40,7 @@ def pad_batch_images(images, max_shape=None):
     """
 
     # 1. max shape
+    # print('len images', len(images))
     if max_shape is None:
         max_shape = get_max_shape(images)
 
@@ -49,7 +54,13 @@ def pad_batch_images(images, max_shape=None):
 
 def greyscale(state):
     """Preprocess state (:, :, 3) image into greyscale"""
-    state = state[:, :, 0]*0.299 + state[:, :, 1]*0.587 + state[:, :, 2]*0.114
+    if state.shape[0] != 48:
+        new_w = int(state.shape[1] * 48 / state.shape[0])
+        state = imresize(state, (48, new_w))
+
+    if len(state.shape) > 2:
+        state = state[:, :, 0]*0.299 + state[:, :, 1]*0.587 + state[:, :, 2]*0.114
+
     state = state[:, :, np.newaxis]
     return state.astype(np.uint8)
 
@@ -64,7 +75,7 @@ def downsample(state):
     return state[::2, ::2, :]
 
 
-def pad_image(img, output_path, pad_size=[8,8,8,8], buckets=None):
+def pad_image(img, output_path, pad_size=[5,1,5,1], buckets=None):
     """Pads image with pad size and with buckets
 
     Args:
@@ -75,11 +86,13 @@ def pad_image(img, output_path, pad_size=[8,8,8,8], buckets=None):
 
     """
     top, left, bottom, right = pad_size
-    old_im = Image.open(img)
+    old_im = Image.fromarray(img) #Image.open(img)
     old_size = (old_im.size[0] + left + right, old_im.size[1] + top + bottom)
     new_size = get_new_size(old_size, buckets)
     new_im = Image.new("RGB", new_size, (255,255,255))
     new_im.paste(old_im, (left, top))
+    if output_path is None:
+        return np.array(new_im)
     new_im.save(output_path)
 
 
@@ -184,7 +197,7 @@ def convert_to_png(formula, dir_output, name, quality=100, density=200,
 
         return "{}.png".format(name)
 
-    except Exception, e:
+    except Exception as e:
         print(e)
         clean(dir_output, name)
         return False

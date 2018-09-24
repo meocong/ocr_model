@@ -227,7 +227,7 @@ class BaseModel(object):
         return scores
 
 
-    def _run_evaluate(config, test_set):
+    def _run_evaluate(self, config, test_set):
         """Model-specific method to overwrite
 
         Performs an epoch of evaluation

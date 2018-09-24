@@ -4,6 +4,7 @@ from PIL import Image
 
 
 from model.img2seq import Img2SeqModel
+from model.img2seq_ctc import Img2SeqCtcModel
 from model.utils.general import Config, run
 from model.utils.text import Vocab
 from model.utils.image import greyscale, crop_image, pad_image, \
@@ -23,7 +24,7 @@ input> data/images_test/0.png""")
     while True:
         try:
             # for python 2
-            img_path = raw_input("input> ")
+            img_path = input("input> ")
         except NameError:
             # for python 3
             img_path = input("input> ")
@@ -31,7 +32,7 @@ input> data/images_test/0.png""")
         if img_path == "exit":
             break
 
-        if img_path[-3:] == "png":
+        if img_path[-3:] in ["png", "jpg"]:
             img = imread(img_path)
 
         elif img_path[-3:] == "pdf":
@@ -55,6 +56,7 @@ input> data/images_test/0.png""")
             img = imread(img_path)
 
 
+        img = pad_image(img, None)
         img = greyscale(img)
         hyps = model.predict(img)
 
@@ -63,12 +65,12 @@ input> data/images_test/0.png""")
 
 if __name__ == "__main__":
     # restore config and model
-    dir_output = "results/small/"
+    dir_output = "results/eng/"
     config_vocab = Config(dir_output + "vocab.json")
     config_model = Config(dir_output + "model.json")
     vocab = Vocab(config_vocab)
 
-    model = Img2SeqModel(config_model, dir_output, vocab)
+    model = Img2SeqCtcModel(config_model, dir_output, vocab)
     model.build_pred()
     model.restore_session(dir_output + "model.weights/")
 

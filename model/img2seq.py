@@ -161,6 +161,7 @@ class Img2SeqModel(BaseModel):
         batch_size = config.batch_size
         nbatches = (len(train_set) + batch_size - 1) // batch_size
         prog = Progbar(nbatches)
+        train_set.shuffle()
 
         # iterate over dataset
         for i, (img, formula) in enumerate(minibatches(train_set, batch_size)):
@@ -277,7 +278,7 @@ class Img2SeqModel(BaseModel):
         for preds in ids_eval:
             for i, pred in enumerate(preds):
                 p = truncate_end(pred, self._vocab.id_end)
-                p = " ".join([self._vocab.id_to_tok[idx] for idx in p])
+                p = "".join([self._vocab.id_to_tok[idx] for idx in p])
                 hyps[i].append(p)
 
         return hyps

@@ -1,5 +1,6 @@
 import numpy as np
 from collections import Counter
+from tqdm import tqdm
 
 
 class Vocab(object):
@@ -12,7 +13,7 @@ class Vocab(object):
     def load_vocab(self):
         special_tokens = [self.config.unk, self.config.pad, self.config.end]
         self.tok_to_id = load_tok_to_id(self.config.path_vocab, special_tokens)
-        self.id_to_tok = {idx: tok for tok, idx in self.tok_to_id.iteritems()}
+        self.id_to_tok = {idx: tok for tok, idx in self.tok_to_id.items()}
         self.n_tok = len(self.tok_to_id)
 
         self.id_pad = self.tok_to_id[self.config.pad]
@@ -39,8 +40,9 @@ def get_form_prepro(vocab, id_unk):
         return vocab[token] if token in vocab else id_unk
 
     def f(formula):
-        formula = formula.strip().split(' ')
-        return map(lambda t: get_token_id(t), formula)
+        formula = formula.strip() #.split(' ')
+        # formula = formula.split(' ')[0]
+        return map(lambda t: get_token_id(t), list(formula))
 
     return f
 
@@ -82,9 +84,11 @@ def build_vocab(datasets, min_count=10):
     print("Building vocab...")
     c = Counter()
     for dataset in datasets:
-        for _, formula in dataset:
+        for idx in range(len(dataset._formulas)):
+            formula = dataset._formulas[idx]
+            # print(formula)
             try:
-                c.update(formula)
+                c.update(list(formula))
             except Exception:
                 print(formula)
                 raise Exception

@@ -127,7 +127,7 @@ def write_answers(references, hypotheses, rev_vocab, dir_name, id_end):
     def ids_to_str(ids):
         ids = truncate_end(ids, id_end)
         s = [rev_vocab[idx] for idx in ids]
-        return " ".join(s)
+        return "".join(s)
 
     def write_file(file_name, list_of_list):
         with open(file_name, "w") as f:

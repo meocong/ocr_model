@@ -20,19 +20,19 @@ def main(data, vocab):
         path_formulas=data_config.path_formulas_train,
         dir_images=data_config.dir_images_train,
         path_matching=data_config.path_matching_train)
-    test_set  = DataGenerator(
-        path_formulas=data_config.path_formulas_test,
-        dir_images=data_config.dir_images_test,
-        path_matching=data_config.path_matching_test)
-    val_set   = DataGenerator(
-        path_formulas=data_config.path_formulas_val,
-        dir_images=data_config.dir_images_val,
-        path_matching=data_config.path_matching_val)
-
-    # produce images and matching files
-    train_set.build(buckets=data_config.buckets)
-    test_set.build(buckets=data_config.buckets)
-    val_set.build(buckets=data_config.buckets)
+    # test_set  = DataGenerator(
+    #     path_formulas=data_config.path_formulas_test,
+    #     dir_images=data_config.dir_images_test,
+    #     path_matching=data_config.path_matching_test)
+    # val_set   = DataGenerator(
+    #     path_formulas=data_config.path_formulas_val,
+    #     dir_images=data_config.dir_images_val,
+    #     path_matching=data_config.path_matching_val)
+    #
+    # # produce images and matching files
+    # train_set.build(buckets=data_config.buckets)
+    # test_set.build(buckets=data_config.buckets)
+    # val_set.build(buckets=data_config.buckets)
 
     # vocab
     vocab_config = Config(vocab)
