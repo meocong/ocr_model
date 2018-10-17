@@ -2,8 +2,8 @@ import click
 
 
 from model.utils.data_generator import DataGenerator
-# from model.img2seq import Img2SeqModel
-from model.img2seq_ctc import Img2SeqCtcModel
+from model.img2seq import Img2SeqModel
+# from model.img2seq_ctc import Img2SeqCtcModel
 from model.utils.lr_schedule import LRSchedule
 from model.utils.general import Config
 from model.utils.text import Vocab
@@ -57,7 +57,7 @@ def main(data, vocab, training, model, output, restore):
             lr_min=config.lr_min)
 
     # Build model and train
-    model = Img2SeqCtcModel(config, dir_output, vocab)
+    model = Img2SeqModel(config, dir_output, vocab)
     model.build_train(config)
 
     if restore:
