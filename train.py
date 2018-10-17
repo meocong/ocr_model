@@ -20,7 +20,7 @@ from model.utils.image import greyscale
         help='Path to model json config')
 @click.option('--output', default="results/small/",
         help='Dir for results and model weights')
-@click.option('--restore', default=True,
+@click.option('--restore', default=False,
         help='Resume training from model weights')
 
 def main(data, vocab, training, model, output, restore):
