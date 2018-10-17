@@ -4,11 +4,11 @@
     "lr_method"    : "Adam",
     "n_epochs"     : 100,
     "batch_size"   : 20,
-    "dropout"      : 1,
+    "dropout"      : 0.1,
     "metric_val"   : "accuracy",
     "clip"         : -1,
 
-    "lr_init"      : 1e-4,
+    "lr_init"      : 0.5,
     "lr_min"       : 4e-5,
     "start_decay"  : 7,
     "end_decay"    : 40,
