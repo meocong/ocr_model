@@ -54,9 +54,9 @@ def pad_batch_images(images, max_shape=None):
 
 def greyscale(state):
     """Preprocess state (:, :, 3) image into greyscale"""
-    if state.shape[0] != 48:
-        new_w = int(state.shape[1] * 48 / state.shape[0])
-        state = imresize(state, (48, new_w))
+    # if state.shape[0] != 48:
+    #     new_w = int(state.shape[1] * 48 / state.shape[0])
+    #     state = imresize(state, (48, new_w))
 
     if len(state.shape) > 2:
         state = state[:, :, 0]*0.299 + state[:, :, 1]*0.587 + state[:, :, 2]*0.114
