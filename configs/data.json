@@ -1,17 +1,17 @@
 {
     "export_name": "data.json",
 
-    "dir_images_train": "../samples/",
-    "dir_images_test" : "../samples",
-    "dir_images_val"  : "../samples",
+    "dir_images_train": "data/english/images/",
+    "dir_images_test" : "data/english/images/",
+    "dir_images_val"  : "data/english/images/",
 
-    "path_matching_train": "./src-train.txt",
-    "path_matching_val"  : "./src-test.txt",
-    "path_matching_test" : "./src-test.txt",
+    "path_matching_train": "data/english/src-train.txt",
+    "path_matching_val"  : "data/english/src-val.txt",
+    "path_matching_test" : "data/english/src-test.txt",
 
-    "path_formulas_train": "./tgt-train.txt",
-    "path_formulas_test" : "./tgt-test.txt",
-    "path_formulas_val"  : "./tgt-test.txt",
+    "path_formulas_train": "data/english/tgt-train.txt",
+    "path_formulas_test" : "data/english/tgt-test.txt",
+    "path_formulas_val"  : "data/english/tgt-val.txt",
 
     "bucket_train": false,
     "bucket_val": false,
@@ -21,5 +21,9 @@
     "max_length_formula": 150,
 
     "buckets": [
-               ]
+        [240, 100], [320, 80], [400, 80], [400, 100], [480, 80], [480, 100],
+        [560, 80], [560, 100], [640, 80], [640, 100], [720, 80], [720, 100],
+        [720, 120], [720, 200], [800, 100], [800, 320], [1000, 200],
+        [1000, 400], [1200, 200], [1600, 200], [1600, 1600]
+        ]
 }
