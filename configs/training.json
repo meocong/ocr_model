@@ -3,15 +3,15 @@
 
     "lr_method"    : "Adam",
     "n_epochs"     : 100,
-    "batch_size"   : 8,
+    "batch_size"   : 6,
     "dropout"      : 0.9,
     "metric_val"   : "accuracy",
     "clip"         : -1,
 
-    "lr_init"      : 0.01,
+    "lr_init"      : 2e-3,
     "lr_min"       : 1e-4,
-    "start_decay"  : 7,
-    "end_decay"    : 40,
-    "lr_warm"      : 0.01,
+    "start_decay"  : 6,
+    "end_decay"    : 13,
+    "lr_warm"      : 2e-4,
     "end_warm"     : 2
 }
