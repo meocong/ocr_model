@@ -3,6 +3,6 @@
     "unk": "_UNK",
     "pad": "_PAD",
     "end": "_END",
-    "path_vocab": "data/english/vocab.txt",
+    "path_vocab": "result_model/english/vocab.txt",
     "min_count_tok": 10
 }
