@@ -1,6 +1,5 @@
 {
 	"export_name": "vocab.json",
-
     "unk": "_UNK",
     "pad": "_PAD",
     "end": "_END",

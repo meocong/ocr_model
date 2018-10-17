@@ -1,25 +1,19 @@
 {
     "export_name": "data.json",
-
     "dir_images_train": "data/english/images/",
     "dir_images_test" : "data/english/images/",
     "dir_images_val"  : "data/english/images/",
-
     "path_matching_train": "data/english/src-train.txt",
     "path_matching_val"  : "data/english/src-val.txt",
     "path_matching_test" : "data/english/src-test.txt",
-
     "path_formulas_train": "data/english/tgt-train.txt",
     "path_formulas_test" : "data/english/tgt-test.txt",
     "path_formulas_val"  : "data/english/tgt-val.txt",
-
     "bucket_train": false,
     "bucket_val": false,
     "bucket_test": false,
-
     "max_iter"          : null,
     "max_length_formula": 200,
-
     "buckets": [
         [240, 100], [320, 80], [400, 80], [400, 100], [480, 80], [480, 100],
         [560, 80], [560, 100], [640, 80], [640, 100], [720, 80], [720, 100],
