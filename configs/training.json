@@ -4,7 +4,7 @@
     "lr_method"    : "Adam",
     "n_epochs"     : 100,
     "batch_size"   : 20,
-    "dropout"      : 0.1,
+    "dropout"      : 0.9,
     "metric_val"   : "accuracy",
     "clip"         : -1,
 
