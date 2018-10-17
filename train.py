@@ -1,6 +1,5 @@
 import click
 
-
 from model.utils.data_generator import DataGenerator
 from model.img2seq import Img2SeqModel
 # from model.img2seq_ctc import Img2SeqCtcModel
