@@ -8,8 +8,8 @@
     "metric_val"   : "accuracy",
     "clip"         : -1,
 
-    "lr_init"      : 0.1,
-    "lr_min"       : 1e4,
+    "lr_init"      : 0.01,
+    "lr_min"       : 1e-4,
     "start_decay"  : 7,
     "end_decay"    : 40,
     "lr_warm"      : 0.01,
