@@ -137,15 +137,8 @@ class Img2SeqModel(BaseModel):
         self.ce_words = tf.reduce_sum(losses) # sum of CE for each word
         self.n_words = tf.reduce_sum(self.formula_length) # number of words
 
-        # error rate
-        acc_list = tf.edit_distance(tf.cast(self.pred_test[0], tf.int32),
-                                    self.formula, normalize=True)
-        acc_rate = tf.reduce_mean(acc_list)
-        # error rate
-        self.predict_accuracy = tf.maximum(1 - acc_rate, 0.0)
-
+        
         # for tensorboard
-        tf.summary.scalar('predict_accuracy', self.predict_accuracy)
         tf.summary.scalar("loss", self.loss)
 
 
