@@ -5,7 +5,7 @@
     "n_epochs"     : 100,
     "batch_size"   : 6,
     "dropout"      : 0.9,
-    "metric_val"   : "accuracy",
+    "metric_val"   : "perplexity",
     "clip"         : -1,
 
     "lr_init"      : 2e-3,
