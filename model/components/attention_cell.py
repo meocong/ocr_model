@@ -31,9 +31,7 @@ class AttentionCell(RNNCell):
         self._num_proj       = num_proj
         self._dtype          = dtype
 
-        # for RNNCell
-        self._state_size = AttentionState(self._cell._state_size, self._dim_o)
-
+        self._state_size = AttentionState(self._cell.state_size, self._dim_o)
 
     @property
     def state_size(self):
@@ -70,9 +68,12 @@ class AttentionCell(RNNCell):
 
         scope = tf.get_variable_scope()
         with tf.variable_scope(scope):
+            #TODO: changed here
+
             # compute new h
-            x                     = tf.concat([embedding, o], axis=-1)
+            x = tf.concat([embedding, o], axis=-1)
             new_h, new_cell_state = self._cell.__call__(x, prev_cell_state)
+
             new_h = tf.nn.dropout(new_h, self._dropout)
 
             # compute attention
@@ -92,10 +93,9 @@ class AttentionCell(RNNCell):
             logits = tf.matmul(new_o, y_W_o)
 
             # new Attn cell state
+            #new_state = AttentionState(new_cell_states, new_o)
             new_state = AttentionState(new_cell_state, new_o)
-
             return logits, new_state
-
 
     def __call__(self, inputs, state):
         """

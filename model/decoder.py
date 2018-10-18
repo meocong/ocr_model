@@ -1,8 +1,5 @@
-import numpy as np
 import tensorflow as tf
-from tensorflow.python.util import nest
-import tensorflow.contrib.layers as layers
-from tensorflow.contrib.rnn import GRUCell, LSTMCell
+from tensorflow.contrib.rnn import GRUCell, LSTMCell, MultiRNNCell, DropoutWrapper
 
 
 from .components.dynamic_decode import dynamic_decode
@@ -10,6 +7,14 @@ from .components.attention_mechanism import AttentionMechanism
 from .components.attention_cell import AttentionCell
 from .components.greedy_decoder_cell import GreedyDecoderCell
 from .components.beam_search_decoder_cell import BeamSearchDecoderCell
+
+
+def create_stacked_rnn(n_unit, n_stack, scope="stacked_lstm", reuse=False):
+    with tf.variable_scope(scope, reuse=reuse):
+        cells = [LSTMCell(num_units=n_unit, _scope="_lstm_%d_th" % _) for _ in range(n_stack)]
+        cell = MultiRNNCell(cells=cells)
+
+        return cell
 
 
 class Decoder(object):
@@ -52,7 +57,14 @@ class Decoder(object):
                     start_token, batch_size)
             attn_meca = AttentionMechanism(img,
                     self._config.attn_cell_config["dim_e"])
-            recu_cell = LSTMCell(self._config.attn_cell_config["num_units"])
+
+
+            # TODO: use multiple stacked lstm layers here.
+            n_stack  = 2 # hard-code here
+
+            recu_cell = create_stacked_rnn(n_unit=self._config.attn_cell_config["num_units"], n_stack=n_stack,
+                                           scope="slacked_lstms", reuse=False)
+
             attn_cell = AttentionCell(recu_cell, attn_meca, dropout,
                     self._config.attn_cell_config, self._n_tok)
 
@@ -64,10 +76,15 @@ class Decoder(object):
             attn_meca = AttentionMechanism(img=img,
                     dim_e=self._config.attn_cell_config["dim_e"],
                     tiles=self._tiles)
-            recu_cell = LSTMCell(self._config.attn_cell_config["num_units"],
-                    reuse=True)
+
+            recu_cell = create_stacked_rnn(n_unit=self._config.attn_cell_config["num_units"], n_stack=n_stack,
+                                           scope="slacked_lstms", reuse=True)
+
             attn_cell = AttentionCell(recu_cell, attn_meca, dropout,
                     self._config.attn_cell_config, self._n_tok)
+
+
+
             if self._config.decoding == "greedy":
                 decoder_cell = GreedyDecoderCell(E, attn_cell, batch_size,
                         start_token, self._id_end)
@@ -103,7 +120,6 @@ def get_embeddings(formula, E, dim, start_token, batch_size):
     embeddings = tf.concat([start_tokens, formula_[:, :-1, :]], axis=1)
 
     return embeddings
-
 
 def embedding_initializer():
     """Returns initializer for embeddings"""

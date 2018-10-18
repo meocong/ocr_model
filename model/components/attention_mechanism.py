@@ -1,5 +1,5 @@
 import tensorflow as tf
-
+from tensorflow.contrib.rnn import MultiRNNCell, DropoutWrapper, LSTMCell, GRUCell, RNNCell
 
 class AttentionMechanism(object):
     """Class to compute attention over an image"""
@@ -24,6 +24,8 @@ class AttentionMechanism(object):
             N    = tf.shape(img)[0]
             H, W = tf.shape(img)[1], tf.shape(img)[2] # image
             C    = img.shape[3].value                 # channels
+
+            # TODO: changed here
             self._img = tf.reshape(img, shape=[N, H*W, C])
         else:
             print("Image shape not supported")
@@ -91,7 +93,7 @@ class AttentionMechanism(object):
             return c
 
 
-    def initial_cell_state(self, cell):
+    def initial_cell_state(self, cells):
         """Returns initial state of a cell computed from the image
 
         Assumes cell.state_type is an instance of named_tuple.
@@ -101,15 +103,37 @@ class AttentionMechanism(object):
             cell: (instance of RNNCell) must define _state_size
 
         """
-        _states_0 = []
-        for hidden_name in cell._state_size._fields:
-            hidden_dim = getattr(cell._state_size, hidden_name)
-            h = self.initial_state(hidden_name, hidden_dim)
-            _states_0.append(h)
+        if type(cells) in [MultiRNNCell, DropoutWrapper]:
+            initial_state_cell = []
 
-        initial_state_cell = type(cell.state_size)(*_states_0)
+            lst_cells = cells._cells if type(cells) is MultiRNNCell else cells._cell._cells
 
-        return initial_state_cell
+            for _, cell in enumerate(lst_cells):
+                _states_0 = []
+
+                with tf.variable_scope("__init_hidden_state_attn_%d" % _):
+                    for hidden_name in cell._state_size._fields:
+                        hidden_dim = getattr(cell._state_size, hidden_name)
+                        h = self.initial_state(hidden_name, hidden_dim)
+                        _states_0.append(h)
+
+                    initial_state_cell += [type(cell.state_size)(*_states_0)]
+
+            return tuple(initial_state_cell)
+
+        elif type(cells) in [LSTMCell, GRUCell, RNNCell]:
+            _states_0 = []
+
+            for hidden_name in cells._state_size._fields:
+                hidden_dim = getattr(cells._state_size, hidden_name)
+                h = self.initial_state(hidden_name, hidden_dim)
+                _states_0.append(h)
+
+            initial_state_cell = type(cells.state_size)(*_states_0)
+
+            return initial_state_cell
+        else:
+            raise Exception("initial_cell_state unknown cell type")
 
 
     def initial_state(self, name, dim):
