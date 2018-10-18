@@ -3,7 +3,7 @@
 
     "lr_method"    : "Adam",
     "n_epochs"     : 100,
-    "batch_size"   : 6,
+    "batch_size"   : 5,
     "dropout"      : 0.9,
     "metric_val"   : "perplexity",
     "clip"         : -1,
