@@ -9,7 +9,7 @@
         "num_units": 512,
         "dim_e"    : 512,
         "dim_o"    : 512,
-        "dim_embeddings": 150
+        "dim_embeddings": 80
     },
 
     "decoding": "beam_search",
