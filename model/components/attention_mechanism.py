@@ -42,34 +42,34 @@ class AttentionMechanism(object):
             H, W = tf.shape(img)[1], tf.shape(img)[2] # image
             C    = img.shape[3].value                 # channels
 
-            max_height = 500
-            pos_E = tf.get_variable(shape=[500, C], name="pos_E", dtype=tf.float32, initializer=embedding_initializer())
-            cell  = LSTMCell(num_units=dim_e, _scope="lstm_pos_E_cell")
+            # max_height = 500
+            # pos_E = tf.get_variable(shape=[500, C], name="pos_E", dtype=tf.float32, initializer=embedding_initializer())
+            # cell  = LSTMCell(num_units=dim_e, _scope="lstm_pos_E_cell")
+            #
+            # _cond = lambda _time, _: tf.less(_time, H)
+            # _initial_state = tf.zeros(shape=[N,1,dim_e], dtype=tf.float32)
+            #
+            # def _body(_time, states):
+            #     _row = img[:, _time, :, :]
+            #
+            #     _pos = tf.cond(tf.less(_time, tf.constant(max_height)),
+            #                    true_fn=lambda : tf.nn.embedding_lookup(pos_E, tf.reshape(_time, shape=(-1,))),
+            #                    false_fn= lambda: tf.nn.embedding_lookup(pos_E, tf.reshape(tf.constant(max_height-1),shape=(-1,))) )
+            #     _pos = tf.tile([_pos], multiples=[N, 1, 1]) #tf.tile([_pos], multiples=[N, tf.shape(_row)[1], 1])
+            #
+            #     _inp = tf.concat([_row, _pos], axis=1)
+            #     _out,_ = tf.nn.dynamic_rnn(cell, _inp, dtype=tf.float32)
+            #
+            #     states = tf.cond(tf.equal(_time,tf.constant(0)), true_fn= lambda : _out,
+            #                      false_fn= lambda : tf.concat([states, _out], axis=1))
+            #
+            #     return [tf.add(_time,1), states]
+            #
+            # _, self._img = tf.while_loop(cond=_cond, body=_body, loop_vars=[tf.constant(0), _initial_state],
+            #                             shape_invariants=[tf.constant(0).get_shape(), tf.TensorShape([None, None, dim_e])])
 
-            _cond = lambda _time, _: tf.less(_time, H)
-            _initial_state = tf.zeros(shape=[N,1,dim_e], dtype=tf.float32)
 
-            def _body(_time, states):
-                _row = img[:, _time, :, :]
-
-                _pos = tf.cond(tf.less(_time, tf.constant(max_height)),
-                               true_fn=lambda : tf.nn.embedding_lookup(pos_E, tf.reshape(_time, shape=(-1,))),
-                               false_fn= lambda: tf.nn.embedding_lookup(pos_E, tf.reshape(tf.constant(max_height-1),shape=(-1,))) )
-                _pos = tf.tile([_pos], multiples=[N, 1, 1]) #tf.tile([_pos], multiples=[N, tf.shape(_row)[1], 1])
-
-                _inp = tf.concat([_row, _pos], axis=1)
-                _out,_ = tf.nn.dynamic_rnn(cell, _inp, dtype=tf.float32)
-
-                states = tf.cond(tf.equal(_time,tf.constant(0)), true_fn= lambda : _out,
-                                 false_fn= lambda : tf.concat([states, _out], axis=1))
-
-                return [tf.add(_time,1), states]
-
-            _, self._img = tf.while_loop(cond=_cond, body=_body, loop_vars=[tf.constant(0), _initial_state],
-                                        shape_invariants=[tf.constant(0).get_shape(), tf.TensorShape([None, None, dim_e])])
-
-
-            #self._img = tf.reshape(img, shape=[N, H*W, C])
+            self._img = tf.reshape(img, shape=[N, H*W, C])
         else:
             print("Image shape not supported")
             raise NotImplementedError
@@ -80,13 +80,13 @@ class AttentionMechanism(object):
         self._tiles = tiles
         self._scope_name = "att_mechanism"
 
-        self._att_img = self._img
-        # attention vector over the image
-        # self._att_img = tf.layers.dense(
-        #     inputs=self._img,
-        #     units=self._dim_e,
-        #     use_bias=False,
-        #     name="att_img")
+        #self._att_img = self._img
+        #attention vector over the image
+        self._att_img = tf.layers.dense(
+            inputs=self._img,
+            units=self._dim_e,
+            use_bias=False,
+            name="att_img")
 
 
     def context(self, h):
