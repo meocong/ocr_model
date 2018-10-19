@@ -49,6 +49,7 @@ def add_timing_signal_nd(x, min_timescale=1.0, max_timescale=1.0e4):
             (tf.to_float(num_timescales) - 1))
     inv_timescales = min_timescale * tf.exp(
             tf.to_float(tf.range(num_timescales)) * -log_timescale_increment)
+
     for dim in xrange(num_dims):
         length = tf.shape(x)[dim + 1]
         position = tf.to_float(tf.range(length))
@@ -63,4 +64,5 @@ def add_timing_signal_nd(x, min_timescale=1.0, max_timescale=1.0e4):
         for _ in xrange(num_dims - 1 - dim):
             signal = tf.expand_dims(signal, -2)
         x += signal
+
     return x

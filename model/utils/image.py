@@ -16,7 +16,7 @@ TIMEOUT = 10
 def get_max_shape(arrays):
     """
     Args:
-        images: list of arrays
+        images-train: list of arrays
 
     """
     shapes = list(map(lambda x: list(x.shape), arrays))
@@ -40,7 +40,7 @@ def pad_batch_images(images, max_shape=None):
     """
 
     # 1. max shape
-    # print('len images', len(images))
+    # print('len images-train', len(images-train))
     if max_shape is None:
         max_shape = get_max_shape(images)
 
@@ -54,12 +54,13 @@ def pad_batch_images(images, max_shape=None):
 
 def greyscale(state):
     """Preprocess state (:, :, 3) image into greyscale"""
-    # if state.shape[0] != 48:
-    #     new_w = int(state.shape[1] * 48 / state.shape[0])
-    #     state = imresize(state, (48, new_w))
+    if state.shape[0] != 48:
+        new_w = int(state.shape[1] * 48 / state.shape[0])
+        state = imresize(state, (48, new_w))
 
     if len(state.shape) > 2:
         state = state[:, :, 0]*0.299 + state[:, :, 1]*0.587 + state[:, :, 2]*0.114
+
 
     state = state[:, :, np.newaxis]
     return state.astype(np.uint8)
@@ -166,7 +167,7 @@ def convert_to_png(formula, dir_output, name, quality=100, density=200,
         dir_output: (string) path to output directory
         name: (string) name of file
         down_ratio: (int) downsampling ratio
-        buckets: list of tuples (list of sizes) to produce similar shape images
+        buckets: list of tuples (list of sizes) to produce similar shape images-train
 
     """
     # write formula into a .tex file
@@ -220,9 +221,10 @@ def build_image(item):
 
 def build_images(formulas, dir_images, quality=100, density=200, down_ratio=2,
         buckets=None, n_threads=4):
-    """Parallel procedure to produce images from formulas
 
-    If some of the images have already been produced, does not recompile them.
+    """Parallel procedure to produce images-train from formulas
+
+    If some of the images-train have already been produced, does not recompile them.
 
     Args:
         formulas: (dict) idx -> string
@@ -231,6 +233,7 @@ def build_images(formulas, dir_images, quality=100, density=200, down_ratio=2,
         list of (path_img, idx). If an exception was raised during the image
             generation, path_img = False
     """
+
     init_dir(dir_images)
     existing_idx = sorted(set([int(file_name.split('.')[0]) for file_name in
             get_files(dir_images) if file_name.split('.')[-1] == "png"]))

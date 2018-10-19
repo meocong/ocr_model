@@ -148,14 +148,14 @@ class Progbar(object):
                 self.sum_values[k][1] += (curr_step - self.last_step)
 
 
-    def _write_bar(self, curr_step):
+    def _write_bar(self, curr_step, cur_epoch):
         last_width = self.last_width
         sys.stdout.write("\b" * last_width)
         sys.stdout.write("\r")
 
         numdigits = int(np.floor(np.log10(self.max_step))) + 1
         barstr = '%%%dd/%%%dd [' % (numdigits, numdigits)
-        bar = barstr % (curr_step, self.max_step)
+        bar =  "Epoch %d:%s" % (cur_epoch, barstr % (curr_step, self.max_step))
         prog = float(curr_step)/self.max_step
         prog_width = int(self.width*prog)
         if prog_width > 0:
@@ -217,7 +217,7 @@ class Progbar(object):
         self.last_width = curr_width
 
 
-    def update(self, curr_step, values):
+    def update(self, curr_step, values, cur_epoch):
         """Updates the progress bar.
 
         Args:
@@ -226,7 +226,7 @@ class Progbar(object):
 
         """
         self._update_values(curr_step, values)
-        self.bar = self._write_bar(curr_step)
+        self.bar = self._write_bar(curr_step,cur_epoch)
         self.info = self._write_info(curr_step)
         self._update_width(curr_step)
         self.last_step = curr_step

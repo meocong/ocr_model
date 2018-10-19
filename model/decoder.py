@@ -60,7 +60,7 @@ class Decoder(object):
 
 
             # TODO: use multiple stacked lstm layers here.
-            n_stack  = 2 # hard-code here
+            n_stack  = 1 # hard-code here
 
             recu_cell = create_stacked_rnn(n_unit=self._config.attn_cell_config["num_units"], n_stack=n_stack,
                                            scope="slacked_lstms", reuse=False)

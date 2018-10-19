@@ -1,7 +1,8 @@
 import sys
 import numpy as np
 import tensorflow as tf
-import tensorflow.contrib.layers as layers
+from tensorflow.saved_model.builder import SavedModelBuilder
+from tensorflow.saved_model import loader
 
 
 from .utils.general import Config, Progbar, minibatches
@@ -42,7 +43,7 @@ class Img2SeqModel(BaseModel):
         self._add_loss_op()
 
         self._add_train_op(config.lr_method, self.lr, self.loss,
-                config.clip)
+                config.clip, global_step=self.global_step)
         self.init_session()
 
         self.logger.info("- done.")
@@ -85,6 +86,13 @@ class Img2SeqModel(BaseModel):
             name='formula')
         self.formula_length = tf.placeholder(tf.int32, shape=(None, ),
             name='formula_length')
+
+        # global step
+        self.global_step = tf.Variable(0,  trainable=False, name='global_step')
+
+        # best score saver
+        self.best_score_saver = tf.Variable(-10000.0, name='best_score_saver')
+        self.best_score = tf.placeholder(tf.float32, shape=(), name='best_score')
 
         # tensorboard
         tf.summary.scalar("lr", self.lr)
@@ -137,11 +145,8 @@ class Img2SeqModel(BaseModel):
         self.ce_words = tf.reduce_sum(losses) # sum of CE for each word
         self.n_words = tf.reduce_sum(self.formula_length) # number of words
 
-        
         # for tensorboard
         tf.summary.scalar("loss", self.loss)
-
-
 
     def _run_epoch(self, config, train_set, val_set, epoch, lr_schedule):
         """Performs an epoch of training
@@ -163,6 +168,7 @@ class Img2SeqModel(BaseModel):
         nbatches = (len(train_set) + batch_size - 1) // batch_size
         prog = Progbar(nbatches)
         train_set.shuffle()
+        validate_after = self._config.valid_steps if hasattr(self._config, "valid_steps") else nbatches
 
         # iterate over dataset
         for i, (img, formula) in enumerate(minibatches(train_set, batch_size)):
@@ -171,10 +177,30 @@ class Img2SeqModel(BaseModel):
                     lr=lr_schedule.lr, dropout=config.dropout)
 
             # update step
-            _, loss_eval = self.sess.run([self.train_op, self.loss],
+            _, loss_eval, global_step, best_score = self.sess.run([self.train_op, self.loss, self.global_step, self.best_score_saver],
                     feed_dict=fd)
+
             prog.update(i + 1, [("loss", loss_eval), ("perplexity",
-                    np.exp(loss_eval)), ("lr", lr_schedule.lr)])
+                    np.exp(loss_eval)), ("lr", lr_schedule.lr)], epoch + 1)
+
+            # validating after number of steps
+            if global_step % validate_after == 0:
+                # evaluation
+                config_eval = Config({"dir_answers": self._dir_output + "formulas_val/",
+                                      "batch_size": config.batch_size})
+                scores = self.evaluate(config_eval, val_set)
+                score = scores[config.metric_val]
+                lr_schedule.update(score=score)
+
+                if best_score is None or score > best_score:
+                    #best_score = score
+                    self.sess.run(tf.assign(self.best_score_saver, self.best_score), {self.best_score:float(score)})
+
+                    self.logger.info("- New best score ({:04.2f})!".format(
+                        score))
+                    self.save_session(global_step=self.global_step)
+
+                print ("\n")
 
             # update learning rate
             lr_schedule.update(batch_no=epoch*nbatches + i)
@@ -182,16 +208,7 @@ class Img2SeqModel(BaseModel):
         # logging
         self.logger.info("- Training: {}".format(prog.info))
 
-        # evaluation
-        config_eval = Config({"dir_answers": self._dir_output + "formulas_val/",
-                "batch_size": config.batch_size})
-        scores = self.evaluate(config_eval, val_set)
-        score = scores[config.metric_val]
-        lr_schedule.update(score=score)
-
-        return score
-
-
+        return best_score
 
     def write_prediction(self, config, test_set):
         """Performs an epoch of evaluation

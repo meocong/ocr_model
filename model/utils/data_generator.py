@@ -28,8 +28,11 @@ class DataGeneratorFile(object):
     def __iter__(self):
         with open(self._filename) as f:
             for idx, line in enumerate(f):
-                line = line.strip() #.split(' ')
-                path_img, id_formula = line, idx #line[1]
+                line = line.strip()
+                path_img, id_formula = line, idx
+
+                # line = line.strip().split(' ')
+                # path_img, id_formula = line[0], line[1]
                 yield path_img, id_formula
 
 
@@ -45,7 +48,7 @@ class DataGenerator(object):
 
         Args:
             path_formulas: (string) file of formulas.
-            dir_images: (string) dir of images, contains jpg files.
+            dir_images: (string) dir of images-train, contains jpg files.
             path_matching: (string) file of name_of_img, id_formula
             img_prepro: (lambda function) takes an array -> an array. Default,
                 identity
@@ -86,7 +89,7 @@ class DataGenerator(object):
 
 
     def bucket(self, bucket_size):
-        """Iterates over the listing and creates buckets of same shape images.
+        """Iterates over the listing and creates buckets of same shape images-train.
 
         Args:
             bucket_size: (int) size of the bucket
@@ -199,12 +202,15 @@ class DataGenerator(object):
         for example in self._data_generator:
             if self._max_iter is not None and n_iter >= self._max_iter:
                 break
-            result, skip = self._process_instance(example)
-            if skip:
-                continue
-            n_iter += 1
-            yield result
 
+            try:
+                result, skip = self._process_instance(example)
+                if skip:
+                    continue
+                n_iter += 1
+                yield result
+            except ValueError as e:
+                print ("Value Error, ", e)
 
     def __len__(self):
         # if self._length is None:
@@ -224,7 +230,7 @@ class DataGenerator(object):
 
     def build(self, quality=100, density=200, down_ratio=2, buckets=None,
                 n_threads=4):
-        """Generates images from the formulas and writes the correspondance
+        """Generates images-train from the formulas and writes the correspondance
         in the matching file.
 
         Args:
@@ -232,10 +238,10 @@ class DataGenerator(object):
             density: parameter for magick
             down_ratio: (int) downsampling ratio
             buckets: list of tuples (list of sizes) to produce similar
-                shape images
+                shape images-train
 
         """
-        # 1. produce images
+        # 1. produce images-train
         init_dir(self._dir_images)
         result = build_images(self._formulas, self._dir_images, quality,
                 density, down_ratio, buckets, n_threads)

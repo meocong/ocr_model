@@ -41,7 +41,7 @@ class BaseModel(object):
         raise NotImplementedError
 
 
-    def _add_train_op(self, lr_method, lr, loss, clip=-1):
+    def _add_train_op(self, lr_method, lr, loss, clip=-1, global_step=None):
         """Defines self.train_op that performs an update on a batch
 
         Args:
@@ -71,17 +71,18 @@ class BaseModel(object):
                 if clip > 0: # gradient clipping if clip is positive
                     grads, vs     = zip(*optimizer.compute_gradients(loss))
                     grads, gnorm  = tf.clip_by_global_norm(grads, clip)
-                    self.train_op = optimizer.apply_gradients(zip(grads, vs))
+                    self.train_op = optimizer.apply_gradients(zip(grads, vs), global_step=global_step)
                 else:
-                    self.train_op = optimizer.minimize(loss)
+                    self.train_op = optimizer.minimize(loss, global_step=global_step)
 
 
     def init_session(self):
         """Defines self.sess, self.saver and initialize the variables"""
         self.sess = tf.Session()
         self.sess.run(tf.global_variables_initializer())
-        self.saver = tf.train.Saver()
 
+
+        self.saver = tf.train.Saver(max_to_keep=self._config.keep_checkpoints if hasattr(self._config, "keep_checkpoints") else 1 )
 
     def restore_session(self, dir_model):
         """Reload weights into session
@@ -92,10 +93,10 @@ class BaseModel(object):
 
         """
         self.logger.info("Reloading the latest trained model...")
-        self.saver.restore(self.sess, dir_model)
+        self.saver.restore(self.sess, tf.train.latest_checkpoint(dir_model))
 
 
-    def save_session(self):
+    def save_session(self, global_step=None):
         """Saves session"""
         # check dir one last time
         dir_model = self._dir_output + "model.weights/"
@@ -106,12 +107,15 @@ class BaseModel(object):
         sys.stdout.flush()
 
         # saving
-        self.saver.save(self.sess, dir_model)
+
+        self.saver.save(self.sess, dir_model, global_step=global_step,)
 
         # logging
         sys.stdout.write("\r")
         sys.stdout.flush()
         self.logger.info("- Saved model in {}".format(dir_model))
+
+        # saving vocab.txt
 
 
     def close_session(self):
@@ -153,18 +157,12 @@ class BaseModel(object):
         for epoch in range(config.n_epochs):
             # logging
             tic = time.time()
-            self.logger.info("Epoch {:}/{:}".format(epoch+1, config.n_epochs))
+            #self.logger.info("Epoch {:}/{:}".format(epoch+1, config.n_epochs))
 
             # epoch
-            score = self._run_epoch(config, train_set, val_set, epoch,
+            best_score = self._run_epoch(config, train_set, val_set, epoch,
                     lr_schedule)
 
-            # save weights if we have new best score on eval
-            if best_score is None or score >= best_score:
-                best_score = score
-                self.logger.info("- New best score ({:04.2f})!".format(
-                        best_score))
-                self.save_session()
             if lr_schedule.stop_training:
                 self.logger.info("- Early Stopping.")
                 break
@@ -173,6 +171,8 @@ class BaseModel(object):
             toc = time.time()
             self.logger.info("- Elapsed time: {:04.2f}, lr: {:04.5f}".format(
                             toc-tic, lr_schedule.lr))
+
+            #time.sleep(5 * 60)
 
         return best_score
 
@@ -211,6 +211,7 @@ class BaseModel(object):
 
         """
         # logging
+        sys.stdout.write("\n\n" )
         sys.stdout.write("\r- Evaluating...")
         sys.stdout.flush()
 
@@ -223,6 +224,8 @@ class BaseModel(object):
         msg = " - ".join(["{} {:04.2f}".format(k, v)
                 for k, v in scores.items()])
         self.logger.info("- Eval: {}".format(msg))
+
+        sys.stdout.write("\n")
 
         return scores
 

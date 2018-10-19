@@ -7,7 +7,7 @@ from ..utils.general import get_files
 
 
 def score_dirs(dir_ref, dir_hyp, prepro_img):
-    """Returns scores from a dir with images
+    """Returns scores from a dir with images-train
 
     Args:
         dir_ref: (string)
@@ -48,10 +48,10 @@ def score_dirs(dir_ref, dir_hyp, prepro_img):
 
 
 def img_edit_distance(img1, img2):
-    """Computes Levenshtein distance between two images.
+    """Computes Levenshtein distance between two images-train.
     (From Harvard's NLP github)
 
-    Slices the images into columns and consider one column as a character.
+    Slices the images-train into columns and consider one column as a character.
 
     Args:
         im1, im2: np arrays of shape (H, W, 1)
