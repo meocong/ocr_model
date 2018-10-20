@@ -68,7 +68,6 @@ class AttentionCell(RNNCell):
 
         scope = tf.get_variable_scope()
         with tf.variable_scope(scope):
-            #TODO: changed here
 
             # compute new h
             x = tf.concat([embedding, o], axis=-1)

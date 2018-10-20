@@ -10,6 +10,28 @@ from threading import Timer
 from os import listdir
 from os.path import isfile, join
 
+import tensorflow as tf
+
+def convert_ckpt_to_pb(ckpt_path, out_pb_folder_path):
+    # check exists
+    if tf.gfile.Exists(out_pb_folder_path):
+        tf.gfile.DeleteRecursively(out_pb_folder_path)
+
+    # converting
+    loaded_graph = tf.Graph()
+    with tf.Session(graph=loaded_graph) as sess:
+        # Restore from checkpoint
+        loader = tf.train.import_meta_graph(ckpt_path + '.meta')
+        loader.restore(sess, ckpt_path)
+
+        # Export checkpoint to SavedModel
+        builder = tf.saved_model.builder.SavedModelBuilder(out_pb_folder_path)
+        builder.add_meta_graph_and_variables(sess,
+                                             [tf.saved_model.tag_constants.TRAINING],
+                                             strip_default_attrs=True)
+
+    builder.add_meta_graph([tf.saved_model.tag_constants.SERVING], strip_default_attrs=True)
+    builder.save()
 
 def minibatches(data_generator, minibatch_size):
     """
@@ -225,6 +247,7 @@ class Progbar(object):
                 The progress bar will display averages for these values.
 
         """
+
         self._update_values(curr_step, values)
         self.bar = self._write_bar(curr_step,cur_epoch)
         self.info = self._write_info(curr_step)

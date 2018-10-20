@@ -124,11 +124,12 @@ class Img2SeqModel(BaseModel):
         """Defines self.pred"""
         encoded_img = self.encoder(self.training, self.img, self.dropout)
         train, test = self.decoder(self.training, encoded_img, self.formula,
-                self.dropout)
+                self.dropout, n_stack=self._config.n_stack,
+                use_positional_embedding=self._config.positional_embeddings,
+                use_positional_embedding_lstm=self._config.positional_embeddings_lstm)
 
         self.pred_train = train
         self.pred_test  = test
-
 
     def _add_loss_op(self):
         """Defines self.loss"""
@@ -168,7 +169,10 @@ class Img2SeqModel(BaseModel):
         nbatches = (len(train_set) + batch_size - 1) // batch_size
         prog = Progbar(nbatches)
         train_set.shuffle()
+
+        ## specify time to save/validate
         validate_after = self._config.valid_steps if hasattr(self._config, "valid_steps") else nbatches
+        save_checkpoint_after = self._config.save_checkpoint_steps
 
         # iterate over dataset
         for i, (img, formula) in enumerate(minibatches(train_set, batch_size)):
@@ -183,8 +187,13 @@ class Img2SeqModel(BaseModel):
             prog.update(i + 1, [("loss", loss_eval), ("perplexity",
                     np.exp(loss_eval)), ("lr", lr_schedule.lr)], epoch + 1)
 
+            # save model after specified number of time steps
+            if global_step % save_checkpoint_after == 0:
+                self.logger.info("\n- Save model after %d timesteps passed !" % global_step)
+                self.save_session(global_step=self.global_step, mode="train")
+
             # validating after number of steps
-            if global_step % validate_after == 0:
+            if global_step % validate_after == 0 :
                 # evaluation
                 config_eval = Config({"dir_answers": self._dir_output + "formulas_val/",
                                       "batch_size": config.batch_size})
@@ -193,14 +202,10 @@ class Img2SeqModel(BaseModel):
                 lr_schedule.update(score=score)
 
                 if best_score is None or score > best_score:
-                    #best_score = score
                     self.sess.run(tf.assign(self.best_score_saver, self.best_score), {self.best_score:float(score)})
 
-                    self.logger.info("- New best score ({:04.2f})!".format(
-                        score))
-                    self.save_session(global_step=self.global_step)
-
-                print ("\n")
+                    self.logger.info("- New best score ({:04.2f})!".format(score))
+                    self.save_session(global_step=self.global_step, mode="valid")
 
             # update learning rate
             lr_schedule.update(batch_no=epoch*nbatches + i)

@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.contrib.rnn import GRUCell, LSTMCell, MultiRNNCell, DropoutWrapper
+from tensorflow.contrib.rnn import GRUCell, LSTMCell, MultiRNNCell, DropoutWrapper, LayerNormBasicLSTMCell
 
 
 from .components.dynamic_decode import dynamic_decode
@@ -11,7 +11,7 @@ from .components.beam_search_decoder_cell import BeamSearchDecoderCell
 
 def create_stacked_rnn(n_unit, n_stack, scope="stacked_lstm", reuse=False):
     with tf.variable_scope(scope, reuse=reuse):
-        cells = [LSTMCell(num_units=n_unit, _scope="_lstm_%d_th" % _) for _ in range(n_stack)]
+        cells = [LSTMCell(num_units=n_unit) for _ in range(n_stack)]
         cell = MultiRNNCell(cells=cells)
 
         return cell
@@ -27,7 +27,8 @@ class Decoder(object):
         self._tiles = 1 if config.decoding == "greedy" else config.beam_size
 
 
-    def __call__(self, training, img, formula, dropout):
+    def __call__(self, training, img, formula, dropout, n_stack=1, use_positional_embedding = True,
+                 use_positional_embedding_lstm=False):
         """Decodes an image into a sequence of token
 
         Args:
@@ -55,12 +56,10 @@ class Decoder(object):
         with tf.variable_scope("attn_cell", reuse=False):
             embeddings = get_embeddings(formula, E, dim_embeddings,
                     start_token, batch_size)
-            attn_meca = AttentionMechanism(img,
-                    self._config.attn_cell_config["dim_e"])
-
-
-            # TODO: use multiple stacked lstm layers here.
-            n_stack  = 1 # hard-code here
+            attn_meca = AttentionMechanism(img=img, dim_e=self._config.attn_cell_config["dim_e"],
+                                           use_positional_embedding=use_positional_embedding,
+                                           use_positional_embedding_lstm=use_positional_embedding_lstm
+                                           )
 
             recu_cell = create_stacked_rnn(n_unit=self._config.attn_cell_config["num_units"], n_stack=n_stack,
                                            scope="slacked_lstms", reuse=False)
@@ -73,9 +72,10 @@ class Decoder(object):
 
         # decoding
         with tf.variable_scope("attn_cell", reuse=True):
-            attn_meca = AttentionMechanism(img=img,
-                    dim_e=self._config.attn_cell_config["dim_e"],
-                    tiles=self._tiles)
+            attn_meca = AttentionMechanism(img=img,dim_e=self._config.attn_cell_config["dim_e"],tiles=self._tiles,
+                                           use_positional_embedding=use_positional_embedding,
+                                           use_positional_embedding_lstm=use_positional_embedding_lstm
+                                           )
 
             recu_cell = create_stacked_rnn(n_unit=self._config.attn_cell_config["num_units"], n_stack=n_stack,
                                            scope="slacked_lstms", reuse=True)

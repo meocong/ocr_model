@@ -2,7 +2,7 @@ import os
 import sys
 import time
 import tensorflow as tf
-
+from tensorflow.saved_model.builder import SavedModelBuilder
 
 from .utils.general import init_dir, get_logger
 
@@ -81,7 +81,6 @@ class BaseModel(object):
         self.sess = tf.Session()
         self.sess.run(tf.global_variables_initializer())
 
-
         self.saver = tf.train.Saver(max_to_keep=self._config.keep_checkpoints if hasattr(self._config, "keep_checkpoints") else 1 )
 
     def restore_session(self, dir_model):
@@ -96,10 +95,10 @@ class BaseModel(object):
         self.saver.restore(self.sess, tf.train.latest_checkpoint(dir_model))
 
 
-    def save_session(self, global_step=None):
+    def save_session(self, global_step=None, mode="valid"):
         """Saves session"""
         # check dir one last time
-        dir_model = self._dir_output + "model.weights/"
+        dir_model = self._dir_output + "model.weights/%s/" % mode
         init_dir(dir_model)
 
         # logging
@@ -107,16 +106,13 @@ class BaseModel(object):
         sys.stdout.flush()
 
         # saving
-
         self.saver.save(self.sess, dir_model, global_step=global_step,)
+
 
         # logging
         sys.stdout.write("\r")
         sys.stdout.flush()
         self.logger.info("- Saved model in {}".format(dir_model))
-
-        # saving vocab.txt
-
 
     def close_session(self):
         """Closes the session"""

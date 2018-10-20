@@ -67,9 +67,8 @@ class Encoder(object):
             out = tf.layers.batch_normalization(out)
             out = tf.nn.relu(out)
 
-            if self._config.positional_embeddings:
-                #if not self._config.positional_embeddings_lstm:
-                # from tensor2tensor lib - positional embeddings
-                out = add_timing_signal_nd(out)
+            # if self._config.positional_embeddings:
+            #     # from tensor2tensor lib - positional embeddings
+            #     out = add_timing_signal_nd(out)
 
         return out
