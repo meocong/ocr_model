@@ -58,8 +58,8 @@ class Decoder(object):
                     start_token, batch_size)
             attn_meca = AttentionMechanism(img=img, dim_e=self._config.attn_cell_config["dim_e"],
                                            use_positional_embedding=use_positional_embedding,
-                                           use_positional_embedding_lstm=use_positional_embedding_lstm
-                                           )
+                                           use_positional_embedding_lstm=use_positional_embedding_lstm,
+                                           n_stacked=self._config.n_stack)
 
             recu_cell = create_stacked_rnn(n_unit=self._config.attn_cell_config["num_units"], n_stack=n_stack,
                                            scope="slacked_lstms", reuse=False)
@@ -74,7 +74,8 @@ class Decoder(object):
         with tf.variable_scope("attn_cell", reuse=True):
             attn_meca = AttentionMechanism(img=img,dim_e=self._config.attn_cell_config["dim_e"],tiles=self._tiles,
                                            use_positional_embedding=use_positional_embedding,
-                                           use_positional_embedding_lstm=use_positional_embedding_lstm
+                                           use_positional_embedding_lstm=use_positional_embedding_lstm,
+                                           n_stacked=self._config.n_stack,
                                            )
 
             recu_cell = create_stacked_rnn(n_unit=self._config.attn_cell_config["num_units"], n_stack=n_stack,
